@@ -1,0 +1,141 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# Copyright 2013 Mick Zimmerman.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0s
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+
+We are using Greg Neagle's FoundationPlist in this script.
+
+"""
+
+import optparse
+import os
+import subprocess
+import shutil
+import uuid
+import FoundationPlist as plistlib
+
+usage = "\nUsage profilestopkg --mobileconfig filename [--packagename value] [--version value] [--myorg value] [--importtomunki]"
+
+
+def main():
+    p = optparse.OptionParser(usage=usage)
+    p.add_option('--mobileconfig', '-m', default="", help="The Mobileconfig file you would like to have packages. You must use the absolute Path. Required")
+    p.add_option('--packagename', '-p', default="", help="Define a output package name. ")
+	p,add_option('--importtomunki', '-i', action="store_true", default="", help="import the package direcrly into munki.")
+    p.add_option('--version', '-v', default="1.0", help="Set package version #Not Required")
+    options, arguments = p.parse_args()
+
+    #Bail out if no mobileconfig was passed or quit els
+    if not options.mobileconfig:
+        p.error("Please read the help info.\nprofilestopkg --help")
+    else:
+        mobileconfig = options.mobileconfig.split("/")
+        mobileconfig = mobileconfig[len(mobileconfig) - 1]
+        mobileconfig = mobileconfig.split(".")[0]
+
+    # set the tmp folder
+    tmp_folder = "/tmp/" + str(uuid.uuid4())
+    # set scripts folder
+    scripts_folder = tmp_folder + "/scripts"
+    # create scripts folder
+    mz_makedirs(scripts_folder)
+
+    # Get the Payload Identifier from the .mobileconfig Using GNeagle's FoundationPlist
+    mobileconfig_dict = plistlib.readPlist(options.mobileconfig)
+    mobileconfig_identifier = mobileconfig_dict["PayloadIdentifier"]
+    mobileconfig_payloadname = mobileconfig_dict["PayloadDisplayName"]
+   
+    #Make the installcheck script
+    installcheck_script = "#!/bin/sh\ncheck=$(/usr/bin/profiles -P | grep %s | awk '{print $1}')\nif [ \"${check}\" == \"\" ]; then\nexit 0\nelse\nexit 1\nfi " % ( mobileconfig_identifier )
+    installcheck_script_loc = tmp_folder + "/installcheck_script.sh"
+    mz_writefile(installcheck_script, installcheck_script_loc)
+
+    #make the uninstall script
+    uninstall_script = "#!/bin/sh\n/usr/bin/profiles -r -p %s " % ( mobileconfig_identifier )
+    uninstall_script_loc = tmp_folder + "/uninstall_script.sh"
+    mz_writefile(uninstall_script, uninstall_script_loc)
+
+    # Make the uninstall check script
+    uninstallcheck_script = "#!/bin/sh\ncheck=$(/usr/bin/profiles -P | grep %s | awk '{print $1}')\nif [ \"${check}\" == \"\" ]; then\nexit 1\nelse\nexit 0\nfi" % ( mobileconfig_identifier )
+    uninstallcheck_script_loc = tmp_folder + "/uninstallcheck_script_loc.sh"
+    mz_writefile(uninstallcheck_script, uninstallcheck_script_loc)
+
+    # set the packagname in the case that no package name was passed
+    if not options.packagename:
+            packagename = mobileconfig + "_" + options.version + ".pkg"
+    else:
+        check_packagename = options.packagename.split(".")
+        check_packagename = check_packagename[len(check_packagename) - 1]
+        if check_packagename == "pkg" or "mpkg":
+            packagename = options.packagename
+        else:
+            packagename = options.packagename + ".pkg"
+
+
+    # Set up Var for postinstall script 
+    postinstall = scripts_folder + "/postinstall"
+    #set the name for the Mobileconfigfile
+    payload = mobileconfig_payloadname + ".mobileconfig"
+    #Set the payload_loc
+    payload_loc = scripts_folder + "/" + payload
+    #copy the mobileconfig to scripts folder
+    shutil.copy2(options.mobileconfig, payload_loc)
+
+    #install script
+    install_profile = "#!/bin/sh\nprofiles -I -F \"./%s\"\nexit 0" % (payload) 
+    mz_writefile(install_profile, postinstall)
+
+    #set permissions on chmod
+    postinsll_chmod_args = ["/bin/chmod", "+x", postinstall]
+    subprocess.call(postinsll_chmod_args, stdin=None, stdout=None, stderr=None, shell=False)
+    
+    # Set identifier
+    identifier = "com." + mobileconfig + "." + options.version
+
+    #set up the list for the subprocess.call()
+
+    pkgbuild_args = ["/usr/bin/pkgbuild", "--nopayload", "--scripts", scripts_folder, "--version", options.version, "--identifier", identifier, packagename]
+    #Run the arguments
+    subprocess.call(pkgbuild_args, stdin=None, stdout=None, stderr=None, shell=False)
+
+    if not options.forcedreciepts:
+		pass
+	else:
+   		new_pkg = os.getcwd() + "/" + packagename
+    	#vars
+    	munkiimport = "/usr/local/munki/munkiimport"
+	    makepkginfo_args = [munkiimport, "--installcheck_script", installcheck_script_loc, "--uninstall_script", uninstall_script_loc, "--uninstallcheck_script", 	uninstallcheck_script_loc, "--name", mobileconfig, "--minimum_os_version", "10.7.0", new_pkg]
+    	subprocess.call(makepkginfo_args, stdin=None, stdout=None, stderr=None, shell=False)
+
+    #Clean up - Delete the temp folder that was created
+    shutil.rmtree(tmp_folder)
+
+
+def mz_makedirs(self):
+    """os.makedirs with logic"""
+    if not os.path.exists(self):
+        print "I am making %s" % (self)
+        os.makedirs(self)
+
+def mz_writefile(self, location):
+    """writes text files"""
+    file = open(location, "w")
+    file.write(self)
+    file.close()
+
+
+if __name__ == '__main__':
+    main()
