@@ -1,4 +1,4 @@
-## profiletopkg
+## profilestopkg
 
 This tool wraps up OS X profiles into pkgs. It also has the ability to import the packages to your munki repo.
 
