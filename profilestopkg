@@ -16,7 +16,7 @@
 # limitations under the License.
 """
 
-We are using Greg Neagle's FoundationPlist in this script.
+We are using Greg Neagle's FoundationPlist in this script. Thanks Greg!
 
 """
 
@@ -27,14 +27,14 @@ import shutil
 import uuid
 import FoundationPlist as plistlib
 
-usage = "\nprofilestopkg --mobileconfig filename [--packagename value] [--version value] [--myorg value] [--importtomunki]"
+usage = "\nprofilestopkg --mobileconfig filename [--packagename value] [--version value] [--importtomunki]"
 
 
 def main():
     p = optparse.OptionParser(usage=usage)
     p.add_option('--mobileconfig', '-m', default="", help="The Mobileconfig file you would like to have packages. You must use the absolute Path. Required")
     p.add_option('--packagename', '-p', default="", help="Define a output package name. ")
-	p,add_option('--importtomunki', '-i', action="store_true", default="", help="import the package direcrly into munki.")
+    p.add_option('--importtomunki', '-i', action="store_true", default="", help="import the package direcrly into munki.")
     p.add_option('--version', '-v', default="1.0", help="Set package version #Not Required")
     options, arguments = p.parse_args()
 
@@ -75,7 +75,7 @@ def main():
 
     # set the packagname in the case that no package name was passed
     if not options.packagename:
-            packagename = mobileconfig + "_" + options.version + ".pkg"
+        packagename = mobileconfig + "_" + options.version + ".pkg"
     else:
         check_packagename = options.packagename.split(".")
         check_packagename = check_packagename[len(check_packagename) - 1]
@@ -113,11 +113,11 @@ def main():
 
     if not options.forcedreciepts:
 		pass
-	else:
-   		new_pkg = os.getcwd() + "/" + packagename
+    else:
+    	new_pkg = os.getcwd() + "/" + packagename
     	#vars
     	munkiimport = "/usr/local/munki/munkiimport"
-	    makepkginfo_args = [munkiimport, "--installcheck_script", installcheck_script_loc, "--uninstall_script", uninstall_script_loc, "--uninstallcheck_script", 	uninstallcheck_script_loc, "--name", mobileconfig, "--minimum_os_version", "10.7.0", new_pkg]
+        makepkginfo_args = [munkiimport, "--installcheck_script", installcheck_script_loc, "--uninstall_script", uninstall_script_loc, "--uninstallcheck_script", 	uninstallcheck_script_loc, "--name", mobileconfig, "--minimum_os_version", "10.7.0", new_pkg]
     	subprocess.call(makepkginfo_args, stdin=None, stdout=None, stderr=None, shell=False)
 
     #Clean up - Delete the temp folder that was created
