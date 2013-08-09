@@ -23,4 +23,4 @@ Options:
 
 ## Thanks
 
-This tool makes use of Greg Neagles FoundationPlist lib. FoundationsPlist.py is a tool to generate and parse MacOSX .plist files.
+Profiletopkg makes use of Greg Neagle's wonderful FoundationPlist lib. FoundationsPlist.py is a tool to generate and parse MacOSX .plist files.
