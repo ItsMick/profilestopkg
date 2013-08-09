@@ -27,7 +27,7 @@ import shutil
 import uuid
 import FoundationPlist as plistlib
 
-usage = "\nUsage profilestopkg --mobileconfig filename [--packagename value] [--version value] [--myorg value] [--importtomunki]"
+usage = "\nprofilestopkg --mobileconfig filename [--packagename value] [--version value] [--myorg value] [--importtomunki]"
 
 
 def main():
