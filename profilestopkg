@@ -111,14 +111,12 @@ def main():
     #Run the arguments
     subprocess.call(pkgbuild_args, stdin=None, stdout=None, stderr=None, shell=False)
 
-    if not options.forcedreciepts:
-		pass
-    else:
-    	new_pkg = os.getcwd() + "/" + packagename
-    	#vars
-    	munkiimport = "/usr/local/munki/munkiimport"
-        makepkginfo_args = [munkiimport, "--installcheck_script", installcheck_script_loc, "--uninstall_script", uninstall_script_loc, "--uninstallcheck_script", 	uninstallcheck_script_loc, "--name", mobileconfig, "--minimum_os_version", "10.7.0", new_pkg]
-    	subprocess.call(makepkginfo_args, stdin=None, stdout=None, stderr=None, shell=False)
+
+    new_pkg = os.getcwd() + "/" + packagename
+    #vars
+    munkiimport = "/usr/local/munki/munkiimport"
+    makepkginfo_args = [munkiimport, "--installcheck_script", installcheck_script_loc, "--uninstall_script", uninstall_script_loc, "--uninstallcheck_script", 	uninstallcheck_script_loc, "--name", mobileconfig, "--minimum_os_version", "10.7.0", new_pkg]
+    subprocess.call(makepkginfo_args, stdin=None, stdout=None, stderr=None, shell=False)
 
     #Clean up - Delete the temp folder that was created
     shutil.rmtree(tmp_folder)
