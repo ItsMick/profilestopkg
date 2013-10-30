@@ -16,7 +16,7 @@
 # limitations under the License.
 """
 
-We are using Greg Neagle's FoundationPlist in this script. Thanks Greg!
+We are using Greg Neagle's FoundationPlist in this script. 
 
 """
 
@@ -47,9 +47,10 @@ def main():
         mobileconfig = mobileconfig.split(".")[0]
 
     # set the tmp folder
-    tmp_folder = "/tmp/" + str(uuid.uuid4())
+    random_uuid = str(uuid.uuid4())
+    tmp_folder = "/tmp/%s" % random_uuid
     # set scripts folder
-    scripts_folder = tmp_folder + "/scripts"
+    scripts_folder =  "%s/scripts" % tmp_folder
     # create scripts folder
     mz_makedirs(scripts_folder)
 
@@ -60,37 +61,37 @@ def main():
    
     #Make the installcheck script
     installcheck_script = "#!/bin/sh\ncheck=$(/usr/bin/profiles -P | grep %s | awk '{print $1}')\nif [ \"${check}\" == \"\" ]; then\nexit 0\nelse\nexit 1\nfi " % ( mobileconfig_identifier )
-    installcheck_script_loc = tmp_folder + "/installcheck_script.sh"
+    installcheck_script_loc = "%s/installcheck_script.sh" % tmp_folder
     mz_writefile(installcheck_script, installcheck_script_loc)
 
     #make the uninstall script
-    uninstall_script = "#!/bin/sh\n/usr/bin/profiles -r -p %s " % ( mobileconfig_identifier )
-    uninstall_script_loc = tmp_folder + "/uninstall_script.sh"
+    uninstall_script = "#!/bin/sh\n/usr/bin/profiles -R -p %s " % ( mobileconfig_identifier )
+    uninstall_script_loc =  "%s/uninstall_script.sh" % tmp_folder
     mz_writefile(uninstall_script, uninstall_script_loc)
 
     # Make the uninstall check script
     uninstallcheck_script = "#!/bin/sh\ncheck=$(/usr/bin/profiles -P | grep %s | awk '{print $1}')\nif [ \"${check}\" == \"\" ]; then\nexit 1\nelse\nexit 0\nfi" % ( mobileconfig_identifier )
-    uninstallcheck_script_loc = tmp_folder + "/uninstallcheck_script_loc.sh"
+    uninstallcheck_script_loc = "%s/uninstallcheck_script_loc.sh" % (tmp_folder)
     mz_writefile(uninstallcheck_script, uninstallcheck_script_loc)
 
     # set the packagname in the case that no package name was passed
     if not options.packagename:
-        packagename = mobileconfig + "_" + options.version + ".pkg"
+        packagename =  + "%s_%s.pkg" % (mobileconfig_payloadname, options.version)
     else:
         check_packagename = options.packagename.split(".")
         check_packagename = check_packagename[len(check_packagename) - 1]
         if check_packagename == "pkg" or "mpkg":
             packagename = options.packagename
         else:
-            packagename = options.packagename + ".pkg"
+            packagename =  "%s.pkg" % options.packagename
 
 
     # Set up Var for postinstall script 
-    postinstall = scripts_folder + "/postinstall"
+    postinstall =  "%s/postinstall" % scripts_folder
     #set the name for the Mobileconfigfile
-    payload = mobileconfig_payloadname + ".mobileconfig"
+    payload = "%s.mobileconfig" % mobileconfig_payloadname
     #Set the payload_loc
-    payload_loc = scripts_folder + "/" + payload
+    payload_loc =  "%s/%s" % (scripts_folder, payload) 
     #copy the mobileconfig to scripts folder
     shutil.copy2(options.mobileconfig, payload_loc)
 
@@ -103,7 +104,7 @@ def main():
     subprocess.call(postinsll_chmod_args, stdin=None, stdout=None, stderr=None, shell=False)
     
     # Set identifier
-    identifier = "com." + mobileconfig + "." + options.version
+    identifier = "com.%s.%s" % (mobileconfig, options.version)
 
     #set up the list for the subprocess.call()
 
@@ -111,8 +112,8 @@ def main():
     #Run the arguments
     subprocess.call(pkgbuild_args, stdin=None, stdout=None, stderr=None, shell=False)
 
-
-    new_pkg = os.getcwd() + "/" + packagename
+    cwd = os.getcwd()
+    new_pkg = "%s/%s" % (cwd, packagename)
     #vars
     munkiimport = "/usr/local/munki/munkiimport"
     makepkginfo_args = [munkiimport, "--installcheck_script", installcheck_script_loc, "--uninstall_script", uninstall_script_loc, "--uninstallcheck_script", 	uninstallcheck_script_loc, "--name", mobileconfig, "--minimum_os_version", "10.7.0", new_pkg]
@@ -125,7 +126,6 @@ def main():
 def mz_makedirs(self):
     """os.makedirs with logic"""
     if not os.path.exists(self):
-        print "I am making %s" % (self)
         os.makedirs(self)
 
 def mz_writefile(self, location):
