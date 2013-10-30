@@ -76,7 +76,7 @@ def main():
 
     # set the packagname in the case that no package name was passed
     if not options.packagename:
-        packagename =  + "%s_%s.pkg" % (mobileconfig_payloadname, options.version)
+        packagename = "%s_%s.pkg" % (mobileconfig_payloadname, options.version)
     else:
         check_packagename = options.packagename.split(".")
         check_packagename = check_packagename[len(check_packagename) - 1]
