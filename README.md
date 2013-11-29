@@ -1,9 +1,23 @@
 ## profilestopkg
 
-This tool wraps up OS X profiles into pkgs. It also has the ability to import the packages to your munki repo.
+This tool wraps up OS X profiles into pkgs.
 
-## Usage: 
-profilestopkg --mobileconfig filename [--packagename value] [--version value] [--importtomunki]
+This script can also import the packages to your munkirepo, via munkiiport. It will automatically create the necessary keys; installcheck_script, uninstall_Script, name, and minimum OS Version(10.7).
+
+## Examples
+
+### Minimum required to create a flat package from a mobileconfig file.
+
+profilestopkg -m /path/to/com.myorg.cong.mobileconfig
+
+### Create a package and import it directly to munki
+
+profilestopkg -m /path/to/com.myorg.cong.mobileconfig -i
+
+
+## Usage:
+
+profilestopkg --mobileconfig <filename> [--packagename <name>] [--version <value>] [--importtomunki]
 
 Options:
 
@@ -11,7 +25,7 @@ Options:
 
   -m MOBILECONFIG, --mobileconfig=MOBILECONFIG
                         The Mobileconfig file you would like to have packages.
-                        You must use the absolute Path. Required
+                        You must use the absolute Path.
 
   -p PACKAGENAME, --packagename=PACKAGENAME
                         Define a output package name.
@@ -19,8 +33,9 @@ Options:
   -i, --importtomunki   import the package direcrly into munki.
 
   -v VERSION, --version=VERSION
-                        Set package version 
+                        Set package version.
+
 
 ## Thanks
 
-Profiletopkg makes use of Greg Neagle's wonderful FoundationPlist lib. FoundationsPlist.py is a tool to generate and parse MacOSX .plist files.
+Profiletopkg makes use of Greg Neagle's FoundationPlist lib.

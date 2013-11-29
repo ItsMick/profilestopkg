@@ -16,7 +16,7 @@
 # limitations under the License.
 """
 
-We are using Greg Neagle's FoundationPlist in this script. 
+We are using Greg Neagle's FoundationPlist in this script.
 
 """
 
@@ -27,15 +27,15 @@ import shutil
 import uuid
 import FoundationPlist as plistlib
 
-usage = "\nprofilestopkg --mobileconfig filename [--packagename value] [--version value] [--importtomunki]"
+usage = "\nprofilestopkg --mobileconfig <filename> [--packagename <name>] [--version <value>] [--importtomunki]"
 
 
 def main():
     p = optparse.OptionParser(usage=usage)
-    p.add_option('--mobileconfig', '-m', default="", help="The Mobileconfig file you would like to have packages. You must use the absolute Path. Required")
+    p.add_option('--mobileconfig', '-m', default="", help="The Mobileconfig file you would like to have packages. You must use the absolute Pathself.")
     p.add_option('--packagename', '-p', default="", help="Define a output package name. ")
     p.add_option('--importtomunki', '-i', action="store_true", default="", help="import the package direcrly into munki.")
-    p.add_option('--version', '-v', default="1.0", help="Set package version #Not Required")
+    p.add_option('--version', '-v', default="1.0", help="Set package version.")
     options, arguments = p.parse_args()
 
     #Bail out if no mobileconfig was passed or quit els
@@ -58,7 +58,7 @@ def main():
     mobileconfig_dict = plistlib.readPlist(options.mobileconfig)
     mobileconfig_identifier = mobileconfig_dict["PayloadIdentifier"]
     mobileconfig_payloadname = mobileconfig_dict["PayloadDisplayName"]
-   
+
     #Make the installcheck script
     installcheck_script = "#!/bin/sh\ncheck=$(/usr/bin/profiles -P | grep %s | awk '{print $1}')\nif [ \"${check}\" == \"\" ]; then\nexit 0\nelse\nexit 1\nfi " % ( mobileconfig_identifier )
     installcheck_script_loc = "%s/installcheck_script.sh" % tmp_folder
@@ -86,23 +86,23 @@ def main():
             packagename =  "%s.pkg" % options.packagename
 
 
-    # Set up Var for postinstall script 
+    # Set up Var for postinstall script
     postinstall =  "%s/postinstall" % scripts_folder
     #set the name for the Mobileconfigfile
     payload = "%s.mobileconfig" % mobileconfig_payloadname
     #Set the payload_loc
-    payload_loc =  "%s/%s" % (scripts_folder, payload) 
+    payload_loc =  "%s/%s" % (scripts_folder, payload)
     #copy the mobileconfig to scripts folder
     shutil.copy2(options.mobileconfig, payload_loc)
 
     #install script
-    install_profile = "#!/bin/sh\nprofiles -I -F \"./%s\"\nexit 0" % (payload) 
+    install_profile = "#!/bin/sh\nprofiles -I -F \"./%s\"\nexit 0" % (payload)
     mz_writefile(install_profile, postinstall)
 
     #set permissions on chmod
     postinsll_chmod_args = ["/bin/chmod", "+x", postinstall]
     subprocess.call(postinsll_chmod_args, stdin=None, stdout=None, stderr=None, shell=False)
-    
+
     # Set identifier
     identifier = "com.%s.%s" % (mobileconfig, options.version)
 
@@ -116,7 +116,7 @@ def main():
     new_pkg = "%s/%s" % (cwd, packagename)
     #vars
     munkiimport = "/usr/local/munki/munkiimport"
-    makepkginfo_args = [munkiimport, "--installcheck_script", installcheck_script_loc, "--uninstall_script", uninstall_script_loc, "--uninstallcheck_script", 	uninstallcheck_script_loc, "--name", mobileconfig, "--minimum_os_version", "10.7.0", new_pkg]
+    makepkginfo_args = [munkiimport, "--installcheck_script", installcheck_script_loc, "--uninstall_script", uninstall_script_loc, "--name", mobileconfig, "--minimum_os_version", "10.7.0", new_pkg]
     subprocess.call(makepkginfo_args, stdin=None, stdout=None, stderr=None, shell=False)
 
     #Clean up - Delete the temp folder that was created
